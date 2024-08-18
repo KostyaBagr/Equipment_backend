@@ -27,12 +27,12 @@ class Equipment(models.Model):
     """Таблица для хранения оборудования."""
     type = models.ForeignKey(EquipmentType, on_delete=models.CASCADE,
                              verbose_name="Тип оборудования")
-    serial_number = models.CharField("Серийный номер", max_length=200)
+    serial_number = models.CharField("Серийный номер", max_length=200, unique=True) # noqa 
     notation = models.TextField("Примечание")
 
     def __str__(self) -> str:
         """Представление записи в админ-панели."""
-        return f"Оборудование: id {self.id},type {self.type}, serial {self.serial_number}"
+        return f"Оборудование: id {self.id},type {self.type}, serial {self.serial_number}" # noqa 
     
     class Meta:
         """Представление таблицы в админ-панели."""

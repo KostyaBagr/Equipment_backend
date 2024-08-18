@@ -12,10 +12,10 @@ from api.models import Equipment, EquipmentType
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
     """Отображение таблицы Equipment."""
-    pass 
+    pass
 
 
 @admin.register(EquipmentType)
 class EquipmentTypeAdmin(admin.ModelAdmin):
     """Отображение таблицы EquipmentType."""
-    pass 
+    pass
