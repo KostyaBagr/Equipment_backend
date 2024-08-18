@@ -8,6 +8,8 @@
 from rest_framework import filters
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
 from api.models import Equipment, EquipmentType
 from api.serializers import (EquipmentSerializer, EquipmentTypeSerializer, 
@@ -29,26 +31,23 @@ class EquipmentList(generics.ListCreateAPIView):
     search_fields = ['type__name', 'serial_number']
     
     def get_serializer_class(self):
-        """Метод заменят сериалайзер в зависимости от метода HTTP."""
+        """Метод заменяет сериалайзер в зависимости от метода HTTP."""
         if self.request.method == 'GET':
             return EquipmentGetSerializer
-        elif self.request.method in ['POST', 'PUT', 'PATCH']:
-            return EquipmentSerializer
-        return super().get_serializer_class()
+        return EquipmentSerializer
     
-    def get_serializer(self, instance=None, data=None, many=False, partial=False): # noqa  
-        """
-        Метод используется для перепределния функций сериалайзера.
-        """
-        if data:
-            return super().get_serializer(instance=instance,
-                                          data=data,
-                                          many=True,
-                                          partial=partial)
-        return super().get_serializer(instance=instance,
-                                      many=True,
-                                      partial=partial)
-  
+    def post(self, request, *args, **kwargs):
+        """Переопределение метода post для создание одного или несольких инстансов.""" # noqa
+        if isinstance(request.data, list):
+            serializer = self.get_serializer(data=request.data, many=True)
+        else:
+            serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, 
+                        headers=headers)
+
 
 class EquipmentDetail(generics.RetrieveUpdateDestroyAPIView):
     """
