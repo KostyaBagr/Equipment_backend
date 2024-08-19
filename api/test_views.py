@@ -67,7 +67,6 @@ def test_get_equipment_detail_positive(client, create_user, create_equipment):
     url = reverse('equipment-detail', args=[equipment_id])
 
     response = client.get(url)
-    print(response.data)
     assert response.status_code == status.HTTP_200_OK
 
 
@@ -98,3 +97,42 @@ def test_create_equipment_negative(client, create_user, create_equipment_type):
     }
     response = client.post(url, data, format='json')
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_update_equipment_positive(client, create_user, create_equipment):
+    """Тестирование изменения записи equipment. Положительный исход."""
+    client.force_login(create_user)
+    url = reverse('equipment-detail', args=[create_equipment.id])
+    data = {
+        'serial_number': 'A2BCDEF9GP',
+        'type': create_equipment.type.id,
+        'notation': 'updated notation'
+    }
+    response = client.put(url, data, content_type='application/json')
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['serial_number'] == 'A2BCDEF9GP'
+    assert response.data['notation'] == 'updated notation'
+
+
+@pytest.mark.django_db
+def test_delete_equipment_positive(client, create_user, create_equipment):
+    """Тестирование удаления записи equipment. Положительный исход."""
+    client.force_login(create_user)
+    url = reverse('equipment-detail', args=[create_equipment.id])
+    response = client.delete(url)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Equipment.objects.filter(id=create_equipment.id).exists()
+
+
+@pytest.mark.django_db
+def test_get_equipment_type_list(client, create_user):
+    """Тестирование получения списка EquipmentType. Положительный исход."""
+    client.force_login(create_user)
+    url = reverse('equipment-type-list')
+    
+    EquipmentType.objects.create(name="Type 1", serial_number_mask="SNM1")
+    EquipmentType.objects.create(name="Type 2", serial_number_mask="SNM2")
+
+    response = client.get(url)
+    assert response.status_code == status.HTTP_200_OK

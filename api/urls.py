@@ -10,5 +10,5 @@ urlpatterns = [
     path("equipment/<int:pk>/", EquipmentDetail.as_view(),
          name='equipment-detail'),
     path("equipment-type/", EquipmentTypeList.as_view(),
-         name='equiopment-type-list')
+         name='equipment-type-list')
 ]
