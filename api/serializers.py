@@ -21,31 +21,58 @@ class EquipmentTypeSerializer(serializers.ModelSerializer):
    
 
 class EquipmentGetSerializer(serializers.ModelSerializer):
-    """Сериайлайзер для получения списка Equipment."""
+    """Сериалайзер для получения списка Equipment с нужными полями."""
     type = EquipmentTypeSerializer(read_only=True)
+    serial_numbers = serializers.SerializerMethodField()
 
     class Meta:
         model = Equipment
-        fields = "__all__"
+        fields = ['serial_numbers', 'type', 'notation']
+
+    def get_serial_numbers(self, obj):
+        """Получить все серийные номера для данного типа и примечания."""
+        related_serial_numbers = Equipment.objects.filter(type=obj.type,
+                                                          notation=obj.notation).values_list('serial_number', flat=True)
+        return list(related_serial_numbers)
 
 
 class EquipmentSerializer(serializers.ModelSerializer):
     """Сериалайзер для таблицы Equipment."""
+    serial_number = serializers.ListField(child=serializers.CharField(), 
+                                          write_only=True)
+
     class Meta:
         model = Equipment
-        fields = "__all__"
+        fields = ["serial_number", "type", "notation"]
 
     def validate(self, data) -> dict:
         """Метод для валидации объекта Equipment."""
-        serial = data.get("serial_number")
+        serial_numbers = data.get("serial_number")
         equipment_type = data.get("type")
+        errors = {}
 
         if equipment_type:
             mask = equipment_type.serial_number_mask
-            if not self._validate_serial_number(serial, mask):
-                raise serializers.ValidationError(f"Serial number '{serial}' does not match the mask '{mask}'.") # noqa
+            for serial in serial_numbers:
+                if not self._validate_serial_number(serial, mask):
+                    errors[serial] = f"Serial number '{serial}' does not match the mask '{mask}'."
+                elif Equipment.objects.filter(serial_number=serial).exists():
+                    errors[serial] = f"Serial number '{serial}' already exists."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
         return data
-    
+
+    def create(self, validated_data):
+        """Переопределение метода create для работы с массивом серийных номеров."""
+        serial_numbers = validated_data.pop("serial_number")
+        equipment_list = []
+        for serial in serial_numbers:
+            equipment = Equipment.objects.create(serial_number=serial, **validated_data)
+            equipment_list.append(equipment)
+        return equipment_list
+
     def _validate_serial_number(self, serial_number: str, mask: str) -> bool:
         """
         Сравнение серийного номера и маски.
@@ -55,8 +82,7 @@ class EquipmentSerializer(serializers.ModelSerializer):
             mask: Маска в regex формате для сравнения.
         """
         regex = self._numbers_to_mask(mask)
-        if re.fullmatch(regex, serial_number):
-            return True
+        return re.fullmatch(regex, serial_number) is not None
 
     def _numbers_to_mask(self, mask: str) -> str:
         """

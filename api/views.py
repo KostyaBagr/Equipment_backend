@@ -35,18 +35,25 @@ class EquipmentList(generics.ListCreateAPIView):
         if self.request.method == 'GET':
             return EquipmentGetSerializer
         return EquipmentSerializer
-    
-    def post(self, request, *args, **kwargs):
-        """Переопределение метода post для создание одного или несольких инстансов.""" # noqa
-        if isinstance(request.data, list):
-            serializer = self.get_serializer(data=request.data, many=True)
-        else:
-            serializer = self.get_serializer(data=request.data)
+
+    def create(self, request, *args, **kwargs):
+        """Переопределение метода create для обработки массива серийных номеров.""" # noqa
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+
+        if isinstance(serializer.validated_data, list):
+            data = [self.get_serializer(instance).data for instance in
+                    serializer.validated_data]
+        else:
+            data = self.get_serializer(serializer.validated_data).data
+
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        """Метод для сохранения созданных объектов."""
+        serializer.save()
 
 
 class EquipmentDetail(generics.RetrieveUpdateDestroyAPIView):

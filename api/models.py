@@ -32,7 +32,7 @@ class Equipment(models.Model):
 
     def __str__(self) -> str:
         """Представление записи в админ-панели."""
-        return f"Оборудование: id {self.id},type {self.type}, serial {self.serial_number}" # noqa 
+        return f"Оборудование: id {self.id}, type {self.type}, serial {self.serial_number}." # noqa 
     
     class Meta:
         """Представление таблицы в админ-панели."""
