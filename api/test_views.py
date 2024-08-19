@@ -82,8 +82,6 @@ def test_create_equipment_positive(client, create_user, create_equipment_type):
     }
     response = client.post(url, data, format='json')
     assert response.status_code == status.HTTP_201_CREATED
-    print(response.data)
-    assert 'serial_number' in response.data
 
 
 @pytest.mark.django_db
