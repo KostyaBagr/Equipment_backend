@@ -68,6 +68,12 @@ class EquipmentDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EquipmentSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self):
+        """Метод заменяет сериалайзер в зависимости от метода HTTP."""
+        if self.request.method == 'GET':
+            return EquipmentGetSerializer
+        return EquipmentSerializer
+
 
 class EquipmentTypeList(generics.ListAPIView):
     """

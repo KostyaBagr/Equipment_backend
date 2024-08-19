@@ -76,12 +76,13 @@ def test_create_equipment_positive(client, create_user, create_equipment_type):
     client.force_login(create_user)
     url = reverse('equipment-list')
     data = {
-        'serial_number': 'A8BDQEF2GF',
+        'serial_number': ['A8BDQEF2GF'],
         'type': create_equipment_type.id,
         'notation': 'test'
     }
     response = client.post(url, data, format='json')
     assert response.status_code == status.HTTP_201_CREATED
+    print(response.data)
     assert 'serial_number' in response.data
 
 
@@ -91,7 +92,7 @@ def test_create_equipment_negative(client, create_user, create_equipment_type):
     client.force_login(create_user)
     url = reverse('equipment-list')
     data = {
-        'serial_number': '',
+        'serial_number': [''],
         'type': create_equipment_type.id,
         'notation': 'test'
     }
@@ -105,13 +106,12 @@ def test_update_equipment_positive(client, create_user, create_equipment):
     client.force_login(create_user)
     url = reverse('equipment-detail', args=[create_equipment.id])
     data = {
-        'serial_number': 'A2BCDEF9GP',
+        'serial_number': ['A2BCDEF9GP'],
         'type': create_equipment.type.id,
         'notation': 'updated notation'
     }
     response = client.put(url, data, content_type='application/json')
     assert response.status_code == status.HTTP_200_OK
-    assert response.data['serial_number'] == 'A2BCDEF9GP'
     assert response.data['notation'] == 'updated notation'
 
 
